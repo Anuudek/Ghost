@@ -132,6 +132,64 @@ const multipleActiveSubscriptionsCodec: FilterCodec = {
     }
 };
 
+// One "Custom field" filter stands in for every defined field, so the filter list
+// stays short however many fields a publisher creates. The chosen field's key, an
+// optional address sub-field, and the value ride in the predicate's `values` as
+// [fieldKey, subfield, value]; `subfield` is '' for a scalar field and `value` is
+// unused for the set / not-set operators.
+const CUSTOM_FIELD_OPERATORS = ['is', 'is-not', 'contains', 'does-not-contain', 'starts-with', 'ends-with', 'is-set', 'is-not-set'] as const;
+
+// NQL operator symbol for each value operator. The field is named in the value
+// position (`custom_fields.key:'…'`) so its key can carry hyphens; the value is
+// matched on `custom_fields.value` (scalar) or `custom_fields.value.<subfield>`
+// (address), which the members filter relation maps onto the real columns.
+const CUSTOM_FIELD_VALUE_SYMBOLS: Record<string, string> = {
+    is: '',
+    'is-not': '-',
+    contains: '~',
+    'does-not-contain': '-~',
+    'starts-with': '~^',
+    'does-not-start-with': '-~^',
+    'ends-with': '~$',
+    'does-not-end-with': '-~$'
+};
+
+const customFieldsCodec: FilterCodec = {
+    // Parsing a grouped custom-field expression back to a predicate is bespoke —
+    // the field's identity is in the value, not the key — so it's handled by a
+    // compound matcher in member-filter-query.ts, not here.
+    parse() {
+        return null;
+    },
+    serialize(predicate) {
+        const [fieldKey, subfield, value] = predicate.values as [string, string, string];
+
+        if (typeof fieldKey !== 'string' || !fieldKey) {
+            return null;
+        }
+
+        const keyClause = `custom_fields.key:${escapeNqlString(fieldKey)}`;
+
+        if (predicate.operator === 'is-set') {
+            return [keyClause];
+        }
+
+        if (predicate.operator === 'is-not-set') {
+            return [`custom_fields.key:-${escapeNqlString(fieldKey)}`];
+        }
+
+        const symbol = CUSTOM_FIELD_VALUE_SYMBOLS[predicate.operator];
+
+        if (symbol === undefined || value === undefined || value === null || value === '') {
+            return null;
+        }
+
+        const valueKey = subfield ? `custom_fields.value.${subfield}` : 'custom_fields.value';
+
+        return [`(${keyClause}+${valueKey}:${symbol}${escapeNqlString(String(value))})`];
+    }
+};
+
 const baseMemberFields = defineFields({
     name: {
         operators: TEXT_OPERATORS,
@@ -186,6 +244,15 @@ const baseMemberFields = defineFields({
             {value: 'email-disabled', label: 'Email disabled'}
         ],
         codec: subscribedCodec
+    },
+    custom_field: {
+        operators: CUSTOM_FIELD_OPERATORS,
+        ui: {
+            label: 'Custom field',
+            type: 'custom',
+            component: 'custom-field'
+        },
+        codec: customFieldsCodec
     },
     last_seen_at: {
         operators: DATE_FILTER_OPERATORS,

@@ -1,6 +1,7 @@
 import React, {useMemo} from 'react';
 import {DATE_OPERATOR_LABELS, RELATIVE_DATE_OPERATOR_LABELS, createOperatorOptions, createRelativeDateRenderer, fieldHasRelativeOperator, getTodayInTimezone} from '@/shared/filters';
 import {type FilterFieldConfig, type FilterFieldGroup, type FilterOption, type ValueSource} from '@tryghost/shade/patterns';
+import CustomFieldFilterRenderer from './custom-field-filter-renderer';
 import {LabelFilterRenderer} from '@/members/label-picker';
 import {LucideIcon} from '@tryghost/shade/utils';
 import {MULTIPLE_ACTIVE_STRIPE_CUSTOMERS_FIELD} from './multiple-active-subscriptions';
@@ -22,6 +23,7 @@ interface UseMemberFilterFieldsOptions {
     membersTrackSources?: boolean;
     emailTrackOpens?: boolean;
     emailTrackClicks?: boolean;
+    customFieldsEnabled?: boolean;
     siteTimezone?: string;
 }
 
@@ -41,6 +43,17 @@ const MEMBER_OPERATOR_LABELS: Record<string, string> = {
 const NUMBER_OPERATOR_LABELS: Record<string, string> = {
     'is-greater': 'is greater than',
     'is-less': 'is less than'
+};
+
+const CUSTOM_FIELD_OPERATOR_LABELS: Record<string, string> = {
+    is: 'is',
+    'is-not': 'is not',
+    contains: 'contains',
+    'does-not-contain': 'does not contain',
+    'starts-with': 'starts with',
+    'ends-with': 'ends with',
+    'is-set': 'is set',
+    'is-not-set': 'is not set'
 };
 
 function getFieldIcon(key: string) {
@@ -83,6 +96,8 @@ function getFieldIcon(key: string) {
         return React.createElement(LucideIcon.MousePointerClick, {className: 'size-4'});
     case 'newsletter_feedback':
         return React.createElement(LucideIcon.MessageSquare, {className: 'size-4'});
+    case 'custom_field':
+        return React.createElement(LucideIcon.SlidersHorizontal, {className: 'size-4'});
     case 'offer_redemptions':
         return React.createElement(LucideIcon.Ticket, {className: 'size-4'});
     case MULTIPLE_ACTIVE_STRIPE_CUSTOMERS_FIELD:
@@ -255,6 +270,7 @@ export function useMemberFilterFields({
     membersTrackSources = false,
     emailTrackOpens = false,
     emailTrackClicks = false,
+    customFieldsEnabled = false,
     siteTimezone = 'UTC'
 }: UseMemberFilterFieldsOptions): FilterFieldGroup[] {
     return useMemo(() => {
@@ -329,6 +345,12 @@ export function useMemberFilterFields({
                     label: newsletter.name
                 }));
             }
+        }
+
+        if (customFieldsEnabled) {
+            basicFields.push(createFieldConfig('custom_field', {
+                customRenderer: props => React.createElement(CustomFieldFilterRenderer, props as React.ComponentProps<typeof CustomFieldFilterRenderer>)
+            }, CUSTOM_FIELD_OPERATOR_LABELS));
         }
 
         basicFields.push(
@@ -452,6 +474,7 @@ export function useMemberFilterFields({
     }, [
         emailFiltersEnabled,
         emailValueSource,
+        customFieldsEnabled,
         emailTrackClicks,
         emailTrackOpens,
         hasMultipleTiers,
