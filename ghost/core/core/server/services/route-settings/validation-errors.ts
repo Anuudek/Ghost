@@ -12,6 +12,40 @@ const MAX_SHOWN_LENGTH = 40;
 export type PathSegment = string | number;
 
 /**
+ * Stable, machine-readable codes describing the class of a routes.yaml failure.
+ *
+ * The human-readable message is authored for the person editing the file and is
+ * free to change; the code is the contract a caller can branch on. Every
+ * validation error carries one — the default is the generic
+ * `INVALID_ROUTE_SETTINGS`.
+ *
+ * Codes name the *kind* of thing that is wrong, independent of which section it
+ * was found in, so a caller can branch on the failure class without also
+ * knowing whether it came from a route, a collection or a taxonomy:
+ *
+ * - `INVALID_ROUTE_SETTINGS` — the overall document/section shape is wrong (the
+ *   schema rejected it); also the default for anything not otherwise classified.
+ * - `INVALID_PATH` — a mount path key (a `routes:`/`collections:` key) is malformed.
+ * - `INVALID_PERMALINK` — a permalink value is missing or malformed, wherever it
+ *   appears (a collection `permalink` or a taxonomy permalink).
+ * - `INVALID_TAXONOMY` — the taxonomy itself is not one Ghost supports (not tag/author).
+ * - `INVALID_TEMPLATE` — a route/collection has no template, data or content type.
+ * - `INVALID_RESOURCE` — a data entry names an unsupported resource.
+ * - `INVALID_DATA` — a data definition's shape is otherwise invalid.
+ */
+export const ROUTE_SETTINGS_ERROR_CODES = {
+    INVALID_ROUTE_SETTINGS: 'INVALID_ROUTE_SETTINGS',
+    INVALID_PATH: 'INVALID_PATH',
+    INVALID_PERMALINK: 'INVALID_PERMALINK',
+    INVALID_TAXONOMY: 'INVALID_TAXONOMY',
+    INVALID_TEMPLATE: 'INVALID_TEMPLATE',
+    INVALID_RESOURCE: 'INVALID_RESOURCE',
+    INVALID_DATA: 'INVALID_DATA'
+} as const;
+
+export type RouteSettingsErrorCode = typeof ROUTE_SETTINGS_ERROR_CODES[keyof typeof ROUTE_SETTINGS_ERROR_CODES];
+
+/**
  * Renders the path to the offending value the way an author would find it in
  * their file, e.g. `routes['/about/'].template[1]`.
  */
@@ -162,9 +196,14 @@ function valueAtPath(value: unknown, path: readonly PathSegment[]): unknown {
     }, value);
 }
 
-export function validationError(at: string, reason: string, help?: string): errors.ValidationError {
+export function validationError(
+    at: string,
+    reason: string,
+    {help, code = ROUTE_SETTINGS_ERROR_CODES.INVALID_ROUTE_SETTINGS}: {help?: string, code?: RouteSettingsErrorCode} = {}
+): errors.ValidationError {
     return new errors.ValidationError({
         message: tpl(messages.validationError, {at, reason}),
+        code,
         ...(help ? {help} : {})
     });
 }
@@ -178,19 +217,19 @@ export function validationError(at: string, reason: string, help?: string): erro
  * @param basePath path of the value that was handed to the schema
  * @param value  that same value, used to describe what the author wrote
  */
-export function toValidationError(error: z.ZodError, basePath: readonly PathSegment[] = [], value?: unknown): errors.ValidationError {
+export function toValidationError(error: z.ZodError, basePath: readonly PathSegment[] = [], value?: unknown, code: RouteSettingsErrorCode = ROUTE_SETTINGS_ERROR_CODES.INVALID_ROUTE_SETTINGS): errors.ValidationError {
     const issue = error.issues[0];
     const issuePath = issue.path as PathSegment[];
     const path = [...basePath, ...issuePath];
 
     const expectation = describeExpectation(path);
     if (!expectation) {
-        return validationError(formatLocation(path), issue.message, DOCS_URL);
+        return validationError(formatLocation(path), issue.message, {help: DOCS_URL, code});
     }
 
     const provided = valueAtPath(value, issuePath);
     const listProblem = Array.isArray(provided) ? lookup(LIST_ENTRY_PROBLEMS, fieldKey(path)) : undefined;
     const found = listProblem ?? `${describeValue(provided)} was provided`;
 
-    return validationError(formatLocation(path), `${expectation.subject} must be ${expectation.expectation}, but ${found}.`, DOCS_URL);
+    return validationError(formatLocation(path), `${expectation.subject} must be ${expectation.expectation}, but ${found}.`, {help: DOCS_URL, code});
 }

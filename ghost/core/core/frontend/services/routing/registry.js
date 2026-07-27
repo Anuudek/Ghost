@@ -1,36 +1,46 @@
 const _ = require('lodash');
-let routes = [];
-let routers = {};
 
 /**
- * @description The router registry is helpful for debugging purposes and let's you search existing routes and routers.
+ * @description The router registry is helpful for debugging purposes and lets you search existing routes and routers.
+ *
+ * Exported as a single shared instance so that every consumer
+ * (`routing/index.js`, `parent-router.js`) operates on the same registry, the
+ * same way the previous module-level state did — just held on an instance
+ * rather than in module-scoped `let` variables.
  */
-module.exports = {
+class Registry {
+    constructor() {
+        /** @type {Array<{route: string, from: string}>} */
+        this.routes = [];
+        /** @type {Object<string, import('express').Router>} */
+        this.routers = {};
+    }
+
     /**
-     * @description Get's called if you register a url pattern in express.
+     * @description Gets called if you register a url pattern in express.
      * @param {string} routerName
      * @param {string} route
      */
     setRoute(routerName, route) {
-        routes.push({route: route, from: routerName});
-    },
+        this.routes.push({route: route, from: routerName});
+    }
 
     /**
-     * @description Get's called if you register a router in express.
+     * @description Gets called if you register a router in express.
      * @param {string} name
      * @param {import('express').Router} router
      */
     setRouter(name, router) {
-        routers[name] = router;
-    },
+        this.routers[name] = router;
+    }
 
     /**
      * @description Get all registered routes.
-     * @returns {Array}
+     * @returns {Array<{route: string, from: string}>}
      */
     getAllRoutes() {
-        return _.cloneDeep(routes);
-    },
+        return _.cloneDeep(this.routes);
+    }
 
     /**
      * @description Get router by name.
@@ -38,8 +48,8 @@ module.exports = {
      * @returns {import('express').Router}
      */
     getRouter(name) {
-        return routers[name];
-    },
+        return this.routers[name];
+    }
 
     /**
      * Gets a router by it's internal router name
@@ -47,12 +57,12 @@ module.exports = {
      * @returns {import('express').Router}
      */
     getRouterByName(name) {
-        for (let routerKey in routers) {
-            if (routers[routerKey].name === name) {
-                return routers[routerKey];
+        for (let routerKey in this.routers) {
+            if (this.routers[routerKey].name === name) {
+                return this.routers[routerKey];
             }
         }
-    },
+    }
 
     /**
      *
@@ -77,7 +87,7 @@ module.exports = {
     getRssUrl(options) {
         let rssUrl = null;
 
-        const collectionIndexRouter = _.find(routers, {name: 'CollectionRouter', routerName: 'index'});
+        const collectionIndexRouter = _.find(this.routers, {name: 'CollectionRouter', routerName: 'index'});
 
         if (collectionIndexRouter) {
             rssUrl = collectionIndexRouter.getRssUrl(options);
@@ -88,7 +98,7 @@ module.exports = {
             }
         }
 
-        const collectionRouters = _.filter(routers, {name: 'CollectionRouter'});
+        const collectionRouters = _.filter(this.routers, {name: 'CollectionRouter'});
 
         if (collectionRouters && collectionRouters.length === 1) {
             rssUrl = collectionRouters[0].getRssUrl(options);
@@ -108,32 +118,34 @@ module.exports = {
         }
 
         return rssUrl;
-    },
+    }
 
     /**
      * @description Reset all routes.
      */
     resetAllRoutes() {
-        routes = [];
-    },
+        this.routes = [];
+    }
 
     /**
      * @description Reset all routers.
      */
     resetAllRouters() {
-        _.each(routers, (value) => {
+        _.each(this.routers, (value) => {
             if (value && typeof value.reset === 'function') {
                 value.reset();
             }
         });
 
-        routers = {};
-    },
+        this.routers = {};
+    }
 
     /**
      * @description Clear all routers (for testing).
      */
     clearAllRouters() {
-        routers = {};
+        this.routers = {};
     }
-};
+}
+
+module.exports = new Registry();
