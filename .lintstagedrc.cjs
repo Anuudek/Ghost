@@ -80,6 +80,18 @@ function findWorkspace(file) {
     return null;
 }
 
+/**
+ * @param {ReadonlyArray<string>} files
+ * @returns {string}
+ */
+function buildOxfmtCommand(files) {
+    const relativeFiles = files
+        .map(file => normalize(path.relative(ROOT, file)))
+        .map(shellQuote)
+        .join(' ');
+    return `pnpm exec oxfmt --no-error-on-unmatched-pattern -- ${relativeFiles}`;
+}
+
 function buildEslintCommand(workspace, files) {
     const base = workspace ? path.join(ROOT, workspace) : ROOT;
     const relativeFiles = files
@@ -141,6 +153,10 @@ module.exports = files => {
     }
 
     /** @type {string[]} */ const result = [];
+
+    if (files.length) {
+        result.push(buildOxfmtCommand(files));
+    }
 
     for (const [workspace, filesForWorkspace] of workspaceFiles.entries()) {
         result.push(buildEslintCommand(workspace, Array.from(filesForWorkspace)));
