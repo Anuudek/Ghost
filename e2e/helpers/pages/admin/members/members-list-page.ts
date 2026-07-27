@@ -99,6 +99,36 @@ export class MembersListPage extends AdminPage {
         }
     }
 
+    // The "Custom field" filter is a cascade: pick the field, then (for an address)
+    // a sub-field, then the value. Operator defaults to "is"; pass one to change it.
+    async addCustomFieldFilter({field, value, subfield, operator}: {field: string; value?: string; subfield?: string; operator?: string}): Promise<void> {
+        await this.filterButton.click();
+        await this.page.getByRole('option', {name: 'Custom field', exact: true}).click();
+
+        await this.page.getByTestId('custom-field-filter-field').click();
+        await this.page.getByRole('option', {name: field, exact: true}).click();
+
+        if (operator) {
+            // The operator control is a dropdown whose trigger shows the current
+            // operator (defaults to "is"); its options are menuitems.
+            const filterItem = this.getFilterItem('Custom field');
+            await filterItem.getByRole('button', {name: 'is', exact: true}).click();
+            await this.page.getByRole('menuitem', {name: operator, exact: true}).click();
+        }
+
+        if (subfield) {
+            await this.page.getByTestId('custom-field-filter-subfield').click();
+            await this.page.getByRole('option', {name: subfield, exact: true}).click();
+        }
+
+        if (value !== undefined) {
+            await this.page.getByTestId('custom-field-filter-value').fill(value);
+        }
+
+        // Close the add-filter popover so the list re-queries.
+        await this.page.keyboard.press('Escape');
+    }
+
     async addSearchableFilter(fieldName: string, searchText: string, optionName: string): Promise<void> {
         await this.filterButton.click();
         await this.page.getByRole('option', {name: fieldName, exact: true}).click();
