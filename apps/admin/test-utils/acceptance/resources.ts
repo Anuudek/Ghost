@@ -12,6 +12,7 @@ import {
     type Member,
     type Newsletter,
     type Offer,
+    type Post,
     type SettingsResponse,
     type StaffInvite,
     type StaffRole,
@@ -174,6 +175,23 @@ export const fakeTags = defineResource<Tag>({
             return visibility ? tags.filter((t) => t.visibility === visibility) : tags;
         },
     },
+});
+
+/**
+ * Posts list fake (passthrough): serves the declared posts and captures every
+ * browse request for outgoing-NQL/order/pagination assertions. The React list
+ * builds an NQL filter the fake never interprets — declare the response and
+ * assert the outgoing filter string instead.
+ */
+export const fakePosts = defineResource<Post>({
+    resource: "posts",
+    semantics: { kind: "passthrough" },
+});
+
+/** Pages list fake (passthrough): the pages counterpart of {@link fakePosts}. */
+export const fakePages = defineResource<Post>({
+    resource: "pages",
+    semantics: { kind: "passthrough" },
 });
 
 /** Automations list fake: the browse request carries no query the fake would need to interpret. */

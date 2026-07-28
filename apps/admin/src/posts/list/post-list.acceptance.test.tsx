@@ -1,10 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { renderAdminApp } from "@test-utils/acceptance";
+import { fakePages, fakePosts, renderAdminApp } from "@test-utils/acceptance";
 import { postListScreen } from "./post-list.screen";
 
 describe("Posts & Pages list (React)", () => {
     it("renders the React posts list when the postsListReact flag is on", async () => {
+        fakePosts([]);
         await renderAdminApp("/posts", { labs: { postsListReact: true } });
 
         await expect.element(postListScreen.page("posts")).toBeVisible();
@@ -12,6 +13,7 @@ describe("Posts & Pages list (React)", () => {
     });
 
     it("renders the React pages list when the flag is on", async () => {
+        fakePages([]);
         await renderAdminApp("/pages", { labs: { postsListReact: true } });
 
         await expect.element(postListScreen.page("pages")).toBeVisible();

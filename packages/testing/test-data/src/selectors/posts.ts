@@ -10,3 +10,9 @@ export const pagesPage = "pages-page";
 // testids — list body + rows (preserve the hooks the e2e PostsPage already queries)
 export const postsList = "posts-list";
 export const postsListItem = "posts-list-item";
+export const pagesList = "pages-list";
+export const pagesListItem = "pages-list-item";
+
+// text fragments — empty states
+export const postsEmptyStateText = "Start creating content";
+export const pagesEmptyStateText = "Start creating pages";
