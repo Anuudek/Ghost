@@ -10,6 +10,9 @@ export type Page = {
     published_at?: string;
     visibility?: string;
     uuid?: string;
+    // The serializer returns this for pages just as it does for posts; the type
+    // omitted it, forcing consumers (e.g. the posts/pages list) to cast.
+    feature_image?: string | null;
 };
 
 export interface PagesResponseType {

@@ -43,7 +43,7 @@ export function usePostList(resource: PostListResource): PostListData {
         id: item.id,
         title: item.title,
         status: item.status,
-        feature_image: (item as {feature_image?: string | null}).feature_image ?? null
+        feature_image: item.feature_image ?? null
     }));
 
     return {
