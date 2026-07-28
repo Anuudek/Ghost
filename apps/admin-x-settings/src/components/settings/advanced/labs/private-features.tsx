@@ -87,6 +87,10 @@ const features: Feature[] = [{
     title: 'Paywall improvements',
     description: 'Enables paywall usability, discoverability and email customization improvements',
     flag: 'paywallImprovements'
+}, {
+    title: 'React posts & pages list',
+    description: 'Renders the posts (/posts) and pages (/pages) list screens from the React app instead of the Ember screens. Gates the migration behind a runtime toggle so we can compare both implementations.',
+    flag: 'postsListReact'
 }];
 
 const AlphaFeatures: React.FC = () => {
