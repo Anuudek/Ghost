@@ -25,6 +25,8 @@ type MemberWelcomeEmailService = {
             };
             memberStatus: 'free' | 'paid';
             trackOpens: boolean;
+            trackClicks: boolean;
+            automationActionRevisionId: string;
         }) => Promise<unknown>;
     };
 };
@@ -197,7 +199,9 @@ const processStep = async ({
                     uuid: member.get('uuid')
                 },
                 memberStatus,
-                trackOpens
+                trackOpens,
+                trackClicks,
+                automationActionRevisionId: step.automation_action_revision_id
             });
             const mailgunMessageId = getMailgunMessageId(sendResult);
             // Only Mailgun sends can produce open events for automation emails
