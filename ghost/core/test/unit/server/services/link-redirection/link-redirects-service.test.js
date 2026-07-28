@@ -91,7 +91,8 @@ describe('LinkRedirectsService', function () {
 
             assert.equal(result.to.href, 'https://example.com/');
             assert.match(result.from.pathname, /^\/r\/[0-9a-f]{8}$/);
-            sinon.assert.calledOnceWithExactly(linkRedirectRepository.save, result, {automationActionRevisionId: 'revision-id'});
+            assert.equal(result.automationActionRevisionId, 'revision-id');
+            sinon.assert.calledOnceWithExactly(linkRedirectRepository.save, result);
         });
 
         for (const code of ['ER_DUP_ENTRY', 'SQLITE_CONSTRAINT', 'SQLITE_CONSTRAINT_UNIQUE']) {

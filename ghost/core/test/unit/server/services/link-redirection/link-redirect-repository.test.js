@@ -15,6 +15,7 @@ const {LinkRedirect} = require('../../../../../core/server/services/link-redirec
  * @param {Date} [values.created_at] - The created_at date of the model
  * @param {string} [values.from] - The from URL path of the model (path only)
  * @param {string} [values.to] - The to URL of the model (full URL including protocol, but not a URL object)
+ * @param {string} [values.automation_action_revision_id] - The owning automation action revision
  * @returns {object} - A stubbed LinkRedirect Bookshelf model
  *
  */
@@ -24,6 +25,7 @@ function createRedirectModel(values = {}) {
     get.withArgs('created_at').returns(values.created_at || new Date('2022-10-20T00:00:00.000Z'));
     get.withArgs('from').returns(values.from || '/r/1234abcd');
     get.withArgs('to').returns(values.to || 'https://google.com');
+    get.withArgs('automation_action_revision_id').returns(values.automation_action_revision_id);
     return {
         id: values.id || '662194931d0ba6fb37c080ee',
         get
@@ -241,10 +243,11 @@ describe('UNIT: LinkRedirectRepository class', function () {
             });
             const linkRedirect = new LinkRedirect({
                 from: new URL('https://example.com/r/1234abcd'),
-                to: new URL('https://google.com')
+                to: new URL('https://google.com'),
+                automationActionRevisionId: 'revision-id'
             });
 
-            await linkRedirectRepository.save(linkRedirect, {automationActionRevisionId: 'revision-id'});
+            await linkRedirectRepository.save(linkRedirect);
 
             sinon.assert.calledOnceWithExactly(add, {
                 from: '/r/1234abcd',

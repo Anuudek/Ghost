@@ -43,17 +43,16 @@ module.exports = class LinkRedirectRepository {
     /**
      * Save a new LinkRedirect to the DB
      * @param {InstanceType<LinkRedirect>} linkRedirect
-     * @param {{automationActionRevisionId?: string}} [options]
      * @returns {Promise<void>}
      */
-    async save(linkRedirect, options = {}) {
+    async save(linkRedirect) {
         debug('Saving link redirect', linkRedirect.from.pathname, '->', linkRedirect.to.href);
         const model = await this.#LinkRedirect.add({
             // Only store the pathname (no support for variable query strings)
             from: this.stripSubdirectoryFromPath(linkRedirect.from.pathname),
             to: linkRedirect.to.href,
-            ...(options.automationActionRevisionId ? {
-                automation_action_revision_id: options.automationActionRevisionId,
+            ...(linkRedirect.automationActionRevisionId ? {
+                automation_action_revision_id: linkRedirect.automationActionRevisionId,
                 to_hash: this.#getToHash(linkRedirect.to)
             } : {})
         }, {});
@@ -88,7 +87,8 @@ module.exports = class LinkRedirectRepository {
             id: model.id,
             from: new URL(this.#trimLeadingSlash(model.get('from')), this.#urlUtils.urlFor('home', true)),
             to: new URL(model.get('to')),
-            edited
+            edited,
+            automationActionRevisionId: model.get('automation_action_revision_id')
         });
     }
 
@@ -99,6 +99,7 @@ module.exports = class LinkRedirectRepository {
      * @param {string} serialized.from - path of the URL
      * @param {string} serialized.to - URL to redirect to
      * @param {boolean} serialized.edited - whether the link has been edited
+     * @param {string} [serialized.automationActionRevisionId] - owning automation action revision
      * @returns {InstanceType<LinkRedirect>} LinkRedirect
      */
     #fromSerialized(serialized) {
@@ -106,7 +107,8 @@ module.exports = class LinkRedirectRepository {
             id: serialized.link_id,
             from: new URL(this.#trimLeadingSlash(serialized.from), this.#urlUtils.urlFor('home', true)),
             to: new URL(serialized.to),
-            edited: serialized.edited
+            edited: serialized.edited,
+            automationActionRevisionId: serialized.automationActionRevisionId
         });
     }
 
@@ -120,7 +122,10 @@ module.exports = class LinkRedirectRepository {
             link_id: linkRedirect.link_id.toHexString(),
             from: linkRedirect.from.pathname,
             to: linkRedirect.to.href,
-            edited: linkRedirect.edited
+            edited: linkRedirect.edited,
+            ...(linkRedirect.automationActionRevisionId ? {
+                automationActionRevisionId: linkRedirect.automationActionRevisionId
+            } : {})
         };
     }
 

@@ -9,7 +9,7 @@ const {LinkRedirect} = require('./link-redirect');
  * @prop {(automationActionRevisionId: string, url: URL) => Promise<LinkRedirect|undefined>} getByAutomationActionRevisionAndURL
  * @prop {({filter: string}) => Promise<LinkRedirect[]>} getAll
  * @prop {({filter: string}) => Promise<String[]>} getFilteredIds
- * @prop {(linkRedirect: LinkRedirect, options?: {automationActionRevisionId?: string}) => Promise<void>} save
+ * @prop {(linkRedirect: LinkRedirect) => Promise<void>} save
  */
 
 // Placeholder pattern for member UUID in redirect destinations
@@ -74,17 +74,18 @@ class LinkRedirectsService {
     /**
      * @param {URL} from
      * @param {URL} to
-     * @param {{automationActionRevisionId?: string}} [options]
+     * @param {string} [automationActionRevisionId]
      *
      * @returns {Promise<LinkRedirect>}
      */
-    async addRedirect(from, to, options = {}) {
+    async addRedirect(from, to, automationActionRevisionId) {
         const link = new LinkRedirect({
             from,
-            to
+            to,
+            automationActionRevisionId
         });
 
-        await this.#linkRedirectRepository.save(link, options);
+        await this.#linkRedirectRepository.save(link);
 
         return link;
     }
@@ -105,7 +106,7 @@ class LinkRedirectsService {
 
         const from = await this.getSlugUrl();
         try {
-            return await this.addRedirect(from, to, {automationActionRevisionId});
+            return await this.addRedirect(from, to, automationActionRevisionId);
         } catch (err) {
             if (!isUniqueConstraintError(err)) {
                 throw err;
