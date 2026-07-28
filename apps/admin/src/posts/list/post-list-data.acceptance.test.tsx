@@ -23,15 +23,17 @@ describe("Posts list — read-only data", () => {
         await expect.element(postListScreen.rows("posts")).toHaveTextContent("Draft");
     });
 
-    it("fetches from the pages endpoint on /pages", async () => {
+    it("fetches from the pages endpoint on /pages and leaves the posts endpoint untouched", async () => {
         const pagesApi = fakePages([post({ title: "About page" })]);
-        // A posts fake is registered too; the pages screen must not read it.
-        fakePosts([post({ title: "A blog post" })]);
+        // A posts fake is registered too; the pages screen must not request it
+        // (enabled-gating). Capturing it lets us assert the network was untouched.
+        const postsApi = fakePosts([post({ title: "A blog post" })]);
         await renderAdminApp("/pages", withFlag);
 
         await expect.element(postListScreen.link("About page")).toBeVisible();
-        await expect(postListScreen.link("A blog post")).toHaveCount(0);
         await expect.poll(() => pagesApi.lastRequest?.url).toBeTruthy();
+        // The gating is the feature under test: the inactive resource must not fetch.
+        expect(postsApi.requests).toHaveLength(0);
     });
 
     it("shows an empty state with a call to action when there are no posts", async () => {

@@ -15,7 +15,10 @@ interface ResourceConfig {
     listTestId: string;
     rowTestId: string;
     newHref: string;
+    /** Concise label for the page-header action button, e.g. "New post". */
+    newButtonLabel: string;
     emptyTitle: string;
+    /** Longer call-to-action for the empty state, e.g. "Write a new post". */
     emptyActionLabel: string;
 }
 
@@ -26,6 +29,7 @@ const RESOURCE_CONFIG: Record<PostListResource, ResourceConfig> = {
         listTestId: 'posts-list',
         rowTestId: 'posts-list-item',
         newHref: '#/editor/post',
+        newButtonLabel: 'New post',
         emptyTitle: 'Start creating content',
         emptyActionLabel: 'Write a new post'
     },
@@ -35,6 +39,7 @@ const RESOURCE_CONFIG: Record<PostListResource, ResourceConfig> = {
         listTestId: 'pages-list',
         rowTestId: 'pages-list-item',
         newHref: '#/editor/page',
+        newButtonLabel: 'New page',
         emptyTitle: 'Start creating pages',
         emptyActionLabel: 'Create a new page'
     }
@@ -68,7 +73,7 @@ const PostList: React.FC<{resource: PostListResource}> = ({resource}) => {
                                     <Button asChild>
                                         <a className='font-bold' href={config.newHref}>
                                             <LucideIcon.Plus className='size-4' />
-                                            <span className='hidden sm:inline'>{config.emptyActionLabel}</span>
+                                            <span className='hidden sm:inline'>{config.newButtonLabel}</span>
                                         </a>
                                     </Button>
                                 </PageHeader.ActionGroup>

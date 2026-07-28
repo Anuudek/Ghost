@@ -27,7 +27,11 @@ export interface PostListData {
  */
 export function usePostList(resource: PostListResource): PostListData {
     const isPosts = resource === 'posts';
-    const searchParams = {limit: String(PAGE_SIZE), order: 'published_at desc'};
+    // `updated_at desc` (Ember's draft ordering) is the single-sort default:
+    // drafts have a null `published_at`, so ordering the mixed list by that
+    // would sink every draft to the bottom. The per-status ordering + the sort
+    // dropdown arrive in PR2.
+    const searchParams = {limit: String(PAGE_SIZE), order: 'updated_at desc'};
 
     const postsQuery = useBrowsePostsInfinite({searchParams, enabled: isPosts});
     const pagesQuery = useBrowsePagesInfinite({searchParams, enabled: !isPosts});
