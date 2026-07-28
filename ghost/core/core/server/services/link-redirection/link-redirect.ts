@@ -7,7 +7,7 @@ export class LinkRedirect {
     edited: boolean;
     automationActionRevisionId: string | undefined;
 
-    constructor(data: {id?: string; from: URL; to: URL; edited?: boolean; automationActionRevisionId?: string}) {
+    constructor(data: {id?: string; from: URL; to: URL; edited?: boolean; automationActionRevisionId?: string | null}) {
         if (!data.id) {
             this.link_id = new ObjectID();
         }
@@ -19,6 +19,6 @@ export class LinkRedirect {
         this.from = data.from;
         this.to = data.to;
         this.edited = !!data.edited;
-        this.automationActionRevisionId = data.automationActionRevisionId;
+        this.automationActionRevisionId = data.automationActionRevisionId ?? undefined;
     }
 }

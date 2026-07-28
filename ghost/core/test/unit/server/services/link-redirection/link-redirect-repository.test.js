@@ -15,7 +15,7 @@ const {LinkRedirect} = require('../../../../../core/server/services/link-redirec
  * @param {Date} [values.created_at] - The created_at date of the model
  * @param {string} [values.from] - The from URL path of the model (path only)
  * @param {string} [values.to] - The to URL of the model (full URL including protocol, but not a URL object)
- * @param {string} [values.automation_action_revision_id] - The owning automation action revision
+ * @param {string|null} [values.automation_action_revision_id] - The owning automation action revision
  * @returns {object} - A stubbed LinkRedirect Bookshelf model
  *
  */
@@ -119,6 +119,19 @@ describe('UNIT: LinkRedirectRepository class', function () {
             assert.equal(linkRedirect.to.href, 'https://google.com/');
             assert.equal(linkRedirect.edited, true);
             assert.equal(ObjectID.isValid(linkRedirect.link_id), true);
+        });
+
+        it('should omit null automation revision ownership from serialized redirects', function () {
+            const model = createRedirectModel({
+                automation_action_revision_id: null
+            });
+            linkRedirectRepository = createLinkRedirectRepository();
+
+            const linkRedirect = linkRedirectRepository.fromModel(model);
+            const serialized = JSON.parse(JSON.stringify(linkRedirect));
+
+            assert.equal(linkRedirect.automationActionRevisionId, undefined);
+            assert.equal('automationActionRevisionId' in serialized, false);
         });
     });
 
