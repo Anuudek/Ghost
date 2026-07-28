@@ -1,5 +1,5 @@
 import { Suspense, lazy, useEffect, useState } from "react";
-import { EmberFallback, subscribeOpenGiftLinkModal } from "./ember-bridge";
+import { subscribeOpenGiftLinkModal } from "./ember-bridge";
 import type { OpenGiftLinkModalEvent } from "./ember-bridge";
 
 // The gift-link modal is React-owned but triggered from the Ember posts/pages
@@ -39,19 +39,5 @@ export function GiftLinkModalHost() {
                 onOpenChange={setOpen}
             />
         </Suspense>
-    );
-}
-
-/**
- * Route element for the Ember-backed posts and pages lists. Delegates the page
- * itself to Ember (EmberFallback) while keeping the React gift-link modal host
- * mounted so the list's context menu can open it.
- */
-export function EmberListWithGiftLinks() {
-    return (
-        <>
-            <EmberFallback />
-            <GiftLinkModalHost />
-        </>
     );
 }

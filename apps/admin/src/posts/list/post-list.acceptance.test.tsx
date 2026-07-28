@@ -18,11 +18,9 @@ describe("Posts & Pages list (React)", () => {
         await expect.element(postListScreen.page("pages")).toHaveTextContent("Pages");
     });
 
-    it("does not render the React list when the flag is off — Ember owns the route", async () => {
-        // Flag off → the gate defers to Ember. There is no Ember app in this
-        // tier, so the React page must never mount.
-        await renderAdminApp("/posts");
-
-        await expect(postListScreen.page("posts")).toHaveCount(0);
-    });
+    // The flag-OFF path (gate defers to Ember) is covered deterministically by
+    // the gate unit test (posts-list-gate.test.tsx). It can't be asserted here:
+    // EmberFallback renders nothing in this tier, so a "React didn't mount"
+    // check would pass trivially at t0 — before config even resolves — proving
+    // nothing. See the adversarial review note in progress-posts-react.md.
 });
