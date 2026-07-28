@@ -1,0 +1,76 @@
+# syntax=docker/dockerfile:1-labs
+
+# Cloudron production image for Ghost
+# Builds admin + server from source, then creates a Cloudron-compatible runtime image.
+#
+# Build: docker build -f Dockerfile.cloudron -t ghcr.io/anuudek/ghost:latest .
+# Deploy: cloudron install --image ghcr.io/anuudek/ghost:latest --location cartas.allhands.com.br
+
+ARG NODE_VERSION=22.23.1
+
+# ---- Stage 1: Build admin ----
+FROM node:$NODE_VERSION-bookworm-slim AS build-admin
+WORKDIR /build
+RUN corepack enable
+
+COPY . .
+
+RUN pnpm install --frozen-lockfile
+RUN pnpm nx run @tryghost/admin:build
+
+# ---- Stage 2: Build server + production closure ----
+FROM node:$NODE_VERSION-bookworm-slim AS deploy
+WORKDIR /build
+RUN corepack enable
+
+COPY --exclude=ghost/core/core/built . .
+COPY --from=build-admin /build/ghost/core/core/built/admin ghost/core/core/built/admin
+
+RUN --mount=type=cache,target=/root/.local/share/pnpm/store,id=pnpm-store \
+    pnpm install --filter "ghost..." --frozen-lockfile --prefer-offline
+
+RUN pnpm --filter-prod "ghost^..." -r run build && \
+    pnpm --filter ghost run build:tsc && \
+    pnpm --filter ghost run build:assets
+
+RUN --mount=type=cache,target=/root/.local/share/pnpm/store,id=pnpm-store \
+    pnpm --filter=ghost --config.inject-workspace-packages=true deploy --prod /home/ghost
+
+RUN cp -r ghost/core/core/built/admin /home/ghost/core/built/admin
+
+RUN node -e "require('better-sqlite3'); console.log('better-sqlite3 OK')"
+
+# ---- Stage 3: Cloudron runtime ----
+FROM node:$NODE_VERSION-bookworm-slim
+
+ENV NODE_ENV=production
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends libjemalloc2 fontconfig && \
+    rm -rf /var/lib/apt/lists/* && \
+    groupmod -g 1001 node && \
+    usermod -u 1001 node && \
+    adduser --disabled-password --gecos "" -u 1000 ghost
+
+WORKDIR /home/ghost
+
+COPY --chown=nobody:nogroup --from=deploy /home/ghost ./
+
+RUN mkdir -p default log && \
+    cp -a content base_content && \
+    chown ghost:ghost /home/ghost && \
+    chown nobody:nogroup default && \
+    chown -R ghost:ghost content log
+
+COPY --chown=ghost:ghost start.sh ./
+RUN chmod +x start.sh
+
+ARG GHOST_BUILD_VERSION=""
+ENV GHOST_BUILD_VERSION=${GHOST_BUILD_VERSION}
+
+USER ghost
+ENV LD_PRELOAD=libjemalloc.so.2
+
+EXPOSE 2368
+
+CMD ["./start.sh"]

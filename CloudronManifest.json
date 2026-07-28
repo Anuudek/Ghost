@@ -1,0 +1,17 @@
+{
+  "id": "com.allhands.ghost",
+  "title": "allhands Ghost",
+  "author": "allhands",
+  "description": "Ghost CMS custom build for allhands",
+  "tagline": "Ghost CMS — allhands",
+  "website": "https://allhands.com.br",
+  "version": "0.0.1",
+  "healthCheckPath": "/",
+  "httpPort": 2368,
+  "addons": {
+    "localstorage": {},
+    "email": {}
+  },
+  "manifestVersion": 2,
+  "minBoxVersion": "6.0.0"
+}
