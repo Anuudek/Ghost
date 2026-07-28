@@ -15,7 +15,7 @@ const GiftLinkModal = lazy(() => import("./posts/analytics/modals/gift-link-moda
  * just re-fires the event), and closing flips `open` while keeping the entry
  * so the modal can animate out.
  */
-function GiftLinkModalHost() {
+export function GiftLinkModalHost() {
     const [entry, setEntry] = useState<OpenGiftLinkModalEvent | null>(null);
     const [open, setOpen] = useState(false);
 

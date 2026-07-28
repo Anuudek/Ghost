@@ -11,8 +11,8 @@ import MyProfileRedirect from "./my-profile-redirect";
 // Ember
 import { EmberFallback, ForceUpgradeGuard } from "./ember-bridge";
 import type { RouteHandle } from "./ember-bridge";
-import { EmberListWithGiftLinks } from "./gift-link-modal-host";
 import { MemberDetailGate } from "./member-detail-gate";
+import { PagesListGate, PostsListGate } from "./posts-list-gate";
 import { MembersRoute } from "./members-route";
 import { OnboardingRedirect } from "./onboarding/onboarding-redirect";
 
@@ -177,8 +177,8 @@ export const routes: RouteObject[] = [
                 lazy: lazyComponent(() => import("./settings/settings")),
                 handle: { allowInForceUpgrade: true } satisfies RouteHandle,
             },
-            {path: "/posts", Component: EmberListWithGiftLinks, handle: emberFallbackHandle},
-            {path: "/pages", Component: EmberListWithGiftLinks, handle: emberFallbackHandle},
+            {path: "/posts", Component: PostsListGate, handle: emberFallbackHandle},
+            {path: "/pages", Component: PagesListGate, handle: emberFallbackHandle},
             // Ember-handled routes
             ...emberFallbackRoutes,
             {
