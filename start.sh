@@ -1,22 +1,25 @@
 #!/bin/bash
 set -eu
 
-# Set up persistent storage dirs on /app/data (Cloudron mounts this)
+# Runs as root — create /app/data dirs and chown to ghost before dropping privileges
 mkdir -p /app/data/content/images \
          /app/data/content/themes \
          /app/data/content/files \
          /app/data/content/media \
          /app/data/content/logs
+chown -R ghost:ghost /app/data
 
 # Copy default themes if not present
 if [ ! -d /app/data/content/themes/casper ]; then
     cp -r /home/ghost/base_content/themes/casper /app/data/content/themes/casper
+    chown -R ghost:ghost /app/data/content/themes/casper
 fi
 if [ -d /home/ghost/base_content/themes/source ] && [ ! -d /app/data/content/themes/source ]; then
     cp -r /home/ghost/base_content/themes/source /app/data/content/themes/source
+    chown -R ghost:ghost /app/data/content/themes/source
 fi
 
-# Ghost config via environment variables (Ghost reads __ as nested key separator)
+# Ghost config via environment variables (__ = nested key separator)
 export url="https://${CLOUDRON_APP_FQDN}"
 export database__client=sqlite3
 export database__connection__filename=/app/data/ghost.db
@@ -32,4 +35,5 @@ export mail__options__auth__user="${CLOUDRON_MAIL_USERNAME:-}"
 export mail__options__auth__pass="${CLOUDRON_MAIL_PASSWORD:-}"
 export mail__options__secure=false
 
-exec node index.js
+# Drop to ghost user and run Ghost
+exec gosu ghost node index.js

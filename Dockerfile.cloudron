@@ -46,7 +46,7 @@ FROM node:$NODE_VERSION-bookworm-slim
 ENV NODE_ENV=production
 
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends libjemalloc2 fontconfig && \
+    apt-get install -y --no-install-recommends libjemalloc2 fontconfig gosu && \
     rm -rf /var/lib/apt/lists/* && \
     groupmod -g 1001 node && \
     usermod -u 1001 node && \
@@ -68,7 +68,6 @@ RUN chmod +x start.sh
 ARG GHOST_BUILD_VERSION=""
 ENV GHOST_BUILD_VERSION=${GHOST_BUILD_VERSION}
 
-USER ghost
 ENV LD_PRELOAD=libjemalloc.so.2
 
 EXPOSE 2368
