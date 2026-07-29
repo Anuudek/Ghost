@@ -13,7 +13,7 @@ FROM node:$NODE_VERSION-bookworm-slim AS build-admin
 WORKDIR /build
 RUN corepack enable
 
-COPY . .
+COPY --exclude=start.sh --exclude=Dockerfile.cloudron --exclude=CloudronManifest.json --exclude=.github . .
 
 RUN pnpm install --frozen-lockfile
 RUN pnpm nx run @tryghost/admin:build
@@ -23,7 +23,7 @@ FROM node:$NODE_VERSION-bookworm-slim AS deploy
 WORKDIR /build
 RUN corepack enable
 
-COPY --exclude=ghost/core/core/built . .
+COPY --exclude=ghost/core/core/built --exclude=start.sh --exclude=Dockerfile.cloudron --exclude=CloudronManifest.json --exclude=.github . .
 COPY --from=build-admin /build/ghost/core/core/built/admin ghost/core/core/built/admin
 
 RUN --mount=type=cache,target=/root/.local/share/pnpm/store,id=pnpm-store \
