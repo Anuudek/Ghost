@@ -24,6 +24,20 @@ if [ -n "$FQDN" ]; then
     export url="https://${FQDN}"
 fi
 
+# Write production config — overrides Ghost's default server.host=127.0.0.1
+# (env var server__host alone is unreliable due to nconf object-merge semantics)
+cat > /home/ghost/config.production.json << 'GHOSTCONFIG'
+{
+    "server": {
+        "host": "0.0.0.0",
+        "port": 2368
+    },
+    "logging": {
+        "transports": ["stdout", "file"]
+    }
+}
+GHOSTCONFIG
+
 export server__host=0.0.0.0
 export database__client=sqlite3
 export database__connection__filename=/app/data/ghost.db
