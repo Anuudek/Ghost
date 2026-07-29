@@ -65,6 +65,11 @@ RUN mkdir -p default log && \
 COPY --chown=ghost:ghost start.sh ./
 RUN chmod +x start.sh
 
+# Bake production config so Ghost binds on 0.0.0.0 (Cloudron read-only FS prevents runtime writes)
+RUN echo '{"server":{"host":"0.0.0.0","port":2368},"logging":{"transports":["stdout","file"]}}' \
+    > /home/ghost/config.production.json && \
+    chown ghost:ghost /home/ghost/config.production.json
+
 ARG GHOST_BUILD_VERSION=""
 ENV GHOST_BUILD_VERSION=${GHOST_BUILD_VERSION}
 
