@@ -1,5 +1,5 @@
 #!/bin/bash
-set -eu
+set -u
 
 # Runs as root — create /app/data dirs and chown to ghost before dropping privileges
 mkdir -p /app/data/content/images \
@@ -9,12 +9,12 @@ mkdir -p /app/data/content/images \
          /app/data/content/logs
 chown -R ghost:ghost /app/data
 
-# Copy default themes if not present
-if [ ! -d /app/data/content/themes/casper ]; then
+# Copy default themes if not present (non-fatal — Ghost runs without them)
+if [ ! -d /app/data/content/themes/casper ] && [ -d /home/ghost/base_content/themes/casper ]; then
     cp -r /home/ghost/base_content/themes/casper /app/data/content/themes/casper
     chown -R ghost:ghost /app/data/content/themes/casper
 fi
-if [ -d /home/ghost/base_content/themes/source ] && [ ! -d /app/data/content/themes/source ]; then
+if [ ! -d /app/data/content/themes/source ] && [ -d /home/ghost/base_content/themes/source ]; then
     cp -r /home/ghost/base_content/themes/source /app/data/content/themes/source
     chown -R ghost:ghost /app/data/content/themes/source
 fi
