@@ -24,6 +24,7 @@ if [ -n "$FQDN" ]; then
     export url="https://${FQDN}"
 fi
 
+export server__host=0.0.0.0
 export database__client=sqlite3
 export database__connection__filename=/app/data/ghost.db
 export paths__contentPath=/app/data/content
