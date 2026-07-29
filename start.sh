@@ -33,23 +33,18 @@ export database__connection__filename=/app/data/ghost.db
 export paths__contentPath=/app/data/content
 export logging__path=/app/data/content/logs
 
-# Mail config — Cloudron email addon
-# CLOUDRON_EMAIL_SMTP_SERVER=mail is the internal unauthenticated relay (port 2525, plain SMTP)
-# CLOUDRON_MAIL_* vars are set when a real SMTP addon (Mailgun etc.) is configured
-SMTP_SERVER="${CLOUDRON_MAIL_SMTP_SERVER:-${CLOUDRON_EMAIL_SMTP_SERVER:-}}"
-if [ -n "$SMTP_SERVER" ]; then
-    export mail__transport=SMTP
-    export mail__from="${CLOUDRON_MAIL_FROM:-noreply@${DOMAIN:-localhost}}"
-    export mail__options__host="$SMTP_SERVER"
-    SMTP_USER="${CLOUDRON_MAIL_USERNAME:-}"
-    if [ -n "$SMTP_USER" ]; then
-        # External SMTP with credentials (Mailgun, SendGrid, etc.)
-        export mail__options__port="${CLOUDRON_MAIL_SUBMISSION_PORT:-587}"
-        export mail__options__secure=false
-        export mail__options__auth__user="$SMTP_USER"
-        export mail__options__auth__pass="${CLOUDRON_MAIL_PASSWORD:-}"
-    else
-        # Cloudron internal relay — plain SMTP, no auth, no TLS upgrade
+# Mail config — if /app/data/mail.env exists it overrides Cloudron's internal relay
+# Format: export mail__options__host=... mail__options__auth__user=... etc.
+if [ -f /app/data/mail.env ]; then
+    # shellcheck disable=SC1091
+    . /app/data/mail.env
+else
+    # Fallback: Cloudron internal relay (only delivers to local Cloudron mailboxes)
+    SMTP_SERVER="${CLOUDRON_MAIL_SMTP_SERVER:-${CLOUDRON_EMAIL_SMTP_SERVER:-}}"
+    if [ -n "$SMTP_SERVER" ]; then
+        export mail__transport=SMTP
+        export mail__from="noreply@${DOMAIN:-localhost}"
+        export mail__options__host="$SMTP_SERVER"
         export mail__options__port="${CLOUDRON_EMAIL_SMTP_PORT:-2525}"
         export mail__options__secure=false
         export mail__options__ignoreTLS=true
